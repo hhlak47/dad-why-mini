@@ -111,3 +111,17 @@
   color: #fff;
   border-color: var(--primary);
 }
+
+.link-row {
+  margin-top: 36rpx;
+}
+
+.link-btn {
+  text-align: center;
+  padding: 28rpx 0;
+  background: #fff;
+  color: var(--primary-deep);
+  border: 2rpx dashed #FFD0B0;
+  border-radius: 20rpx;
+  font-size: 30rpx;
+}

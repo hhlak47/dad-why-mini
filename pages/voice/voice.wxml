@@ -1,0 +1,26 @@
+<view class="container">
+  <view class="title">录制{{roleName}}的声音</view>
+  <view class="subtitle">录一段音，之后「念给孩子听」就用{{roleName}}的声音读答案</view>
+
+  <view class="role-tabs">
+    <view class="tab {{role==='dad' ? 'active' : ''}}" data-role="dad" bindtap="selectRole">
+      爸爸{{dadCloned ? ' ✓' : ''}}
+    </view>
+    <view class="tab {{role==='mom' ? 'active' : ''}}" data-role="mom" bindtap="selectRole">
+      妈妈{{momCloned ? ' ✓' : ''}}
+    </view>
+  </view>
+
+  <view class="guide-card">
+    <view class="guide-label">请{{roleName}}朗读下面这段话（安静环境、自然语速）：</view>
+    <view class="guide-text">{{guideText}}</view>
+  </view>
+
+  <button class="rec-btn {{recording ? 'recording' : ''}}" bindtap="toggleRecord" disabled="{{cloning}}">
+    {{cloning ? '训练中…' : (recording ? '停止并克隆' : '开始录制')}}
+  </button>
+
+  <view class="status" wx:if="{{statusText}}">{{statusText}}</view>
+
+  <view class="tip">说明：声音克隆由腾讯云提供，限时免费。录音仅用于生成专属音色，可随时在腾讯云控制台删除。</view>
+</view>

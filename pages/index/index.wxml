@@ -39,4 +39,8 @@
   </view>
 
   <button class="primary-btn" bindtap="onSubmit">讲给孩子听</button>
+
+  <view class="link-row">
+    <view class="link-btn" bindtap="goVoice">🎙️ 我的声音（让爸爸妈妈读答案）</view>
+  </view>
 </view>

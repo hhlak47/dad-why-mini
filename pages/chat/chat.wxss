@@ -265,3 +265,37 @@
   padding: 22rpx 0 30rpx;
   background: var(--card);
 }
+
+.voice-switch {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  padding: 18rpx 40rpx;
+  background: var(--card);
+  border-bottom: 1rpx solid var(--line);
+}
+.vs-label {
+  font-size: 26rpx;
+  color: var(--sub);
+  margin-right: 4rpx;
+}
+.vs-chip {
+  padding: 12rpx 28rpx;
+  background: #f2f3f5;
+  color: #555;
+  border-radius: 999rpx;
+  font-size: 26rpx;
+  border: 2rpx solid transparent;
+}
+.vs-chip.active {
+  background: #E8F8EE;
+  color: #07c160;
+  border-color: #07c160;
+  font-weight: 600;
+}
+.vs-go {
+  font-size: 26rpx;
+  color: var(--primary-deep);
+  padding: 12rpx 16rpx;
+}

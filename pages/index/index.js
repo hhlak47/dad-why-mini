@@ -79,5 +79,9 @@ Page({
     wx.navigateTo({
       url: `/pages/chat/chat?q=${encodeURIComponent(q)}&age=${age}`
     })
+  },
+
+  goVoice() {
+    wx.navigateTo({ url: '/pages/voice/voice' })
   }
 })

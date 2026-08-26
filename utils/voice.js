@@ -96,8 +96,8 @@ function callCloudVoice(voiceAction, payload) {
     wx.cloud.callFunction({
       name: config.CLOUD_VOICE_FUNCTION || 'voice',
       data: Object.assign({ voiceAction }, payload),
-      // 云函数已配置 20s 超时，前端也同步放大，避免默认 3s 截断
-      timeout: 25000,
+      // 云函数已配置 60s 超时（声音克隆可能较慢），前端同步放大
+      timeout: 65000,
       success: (res) => resolve(res.result),
       fail: (err) => {
         console.error('[voice] callFunction fail:', err)
@@ -125,11 +125,11 @@ function asr(b64) {
 
 // ---------------------- 合成并播放 ----------------------
 let playing = false
-function textToSpeech(text) {
+function textToSpeech(text, voiceId) {
   if (!text) return Promise.reject(new Error('没有可播放的内容'))
   if (playing) return Promise.reject(new Error('正在播放'))
   if (config.BACKEND_MODE === 'cloud') {
-    return callCloudVoice('tts', { text })
+    return callCloudVoice('tts', { text, voiceId })
       .then((res) => {
         if (!res || res.ok === false) throw new Error((res && res.error) || '合成失败')
         const audio = (res.data && res.data.audio) || ''
@@ -143,6 +143,21 @@ function textToSpeech(text) {
       const audio = (res.data && res.data.audio) || ''
       if (!audio) throw new Error('合成结果为空')
       return playBase64Mp3(audio)
+    })
+}
+
+// ---------------------- 父母声音克隆 ----------------------
+// 录制一段 mp3 base64 音频 -> 云端训练出专属音色 VoiceId
+// role: 'dad' | 'mom'，前端拿到 voiceId 后存到云数据库 voices 集合
+function cloneVoice(audio, voiceName, role, promptText) {
+  if (config.BACKEND_MODE !== 'cloud') {
+    return Promise.reject(new Error('声音克隆仅支持云函数模式（请确认 config.js 的 BACKEND_MODE 为 cloud）'))
+  }
+  if (!audio) return Promise.reject(new Error('缺少音频数据'))
+  return callCloudVoice('clone', { audio, voiceName, role, promptText })
+    .then((res) => {
+      if (!res || res.ok === false) throw new Error((res && res.error) || '克隆失败')
+      return (res.data && res.data.voiceId) || ''
     })
 }
 
@@ -171,4 +186,4 @@ function playBase64Mp3(b64) {
   })
 }
 
-module.exports = { speechToText, textToSpeech, startRecord, stopRecord, asr, _postJSON: postJSON, voiceBase }
+module.exports = { speechToText, textToSpeech, startRecord, stopRecord, asr, cloneVoice, _postJSON: postJSON, voiceBase }

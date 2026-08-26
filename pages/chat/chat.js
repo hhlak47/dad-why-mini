@@ -1,5 +1,6 @@
 const ai = require('../../utils/ai.js')
 const voice = require('../../utils/voice.js')
+const config = require('../../config.js')
 
 // Loading 文案轮换（PRD 建议避免“AI 正在生成……”）
 const LOADING_TEXTS = [
@@ -28,15 +29,42 @@ Page({
     scrollAnchor: 'anchor-0',
     _mid: 0,
     _aid: 0,
-    _timer: null
+    _timer: null,
+    voiceOptions: [],        // 可选音色：默认女声 + 已克隆的爸爸/妈妈
+    currentVoiceId: ''       // 当前选中的音色 ID
   },
 
   onLoad(options) {
     const question = decodeURIComponent(options.q || '')
     const age = parseInt(options.age || '4', 10)
     this.setData({ question, age })
+    this.loadVoices()
     // 进入即触发第一次“讲给孩子听”
     this.runAction('answer', {})
+  },
+
+  // 读取已克隆的父母音色，构建切换选项
+  loadVoices() {
+    const db = wx.cloud.database()
+    db.collection('voices').get()
+      .then((res) => {
+        const list = res.data || []
+        const options = [{ id: config.DEFAULT_VOICE_ID, name: '默认女声' }]
+        list.forEach((v) => {
+          if (v.role === 'dad') options.push({ id: v.voiceId, name: '爸爸' })
+          if (v.role === 'mom') options.push({ id: v.voiceId, name: '妈妈' })
+        })
+        this.setData({ voiceOptions: options, currentVoiceId: config.DEFAULT_VOICE_ID })
+      })
+      .catch(() => {
+        this.setData({ voiceOptions: [{ id: config.DEFAULT_VOICE_ID, name: '默认女声' }], currentVoiceId: config.DEFAULT_VOICE_ID })
+      })
+  },
+
+  // 切换音色
+  selectVoice(e) {
+    const voiceId = e.currentTarget.dataset.voiceId
+    this.setData({ currentVoiceId: voiceId })
   },
 
   onUnload() {
@@ -211,8 +239,9 @@ Page({
   onSpeak(e) {
     const content = e.currentTarget.dataset.content
     if (!content) return
+    const voiceId = this.data.currentVoiceId || config.DEFAULT_VOICE_ID
     wx.showToast({ title: '正在合成语音…', icon: 'none' })
-    voice.textToSpeech(content)
+    voice.textToSpeech(content, voiceId)
       .then(() => {})
       .catch((err) => {
         console.error('[语音播放] 失败：', err)
@@ -240,5 +269,9 @@ Page({
     wx.navigateBack({
       fail: () => wx.redirectTo({ url: '/pages/index/index' })
     })
+  },
+
+  goVoice() {
+    wx.navigateTo({ url: '/pages/voice/voice' })
   }
 })

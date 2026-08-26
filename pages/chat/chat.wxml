@@ -1,6 +1,18 @@
 <view class="chat">
   <view class="qbar">“{{question}}”</view>
 
+  <view class="voice-switch" wx:if="{{voiceOptions.length > 1}}">
+    <text class="vs-label">声音</text>
+    <view
+      wx:for="{{voiceOptions}}"
+      wx:key="id"
+      class="vs-chip {{currentVoiceId === item.id ? 'active' : ''}}"
+      bindtap="selectVoice"
+      data-voice-id="{{item.id}}"
+    >{{item.name}}</view>
+    <text class="vs-go" bindtap="goVoice">+ 录制</text>
+  </view>
+
   <scroll-view class="messages" scroll-y scroll-into-view="{{scrollAnchor}}" scroll-with-animation>
     <block wx:for="{{messages}}" wx:key="id">
       <!-- 孩子追问 -->
