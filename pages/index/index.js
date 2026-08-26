@@ -53,12 +53,14 @@ Page({
       .catch((err) => {
         this.setData({ recognizing: false })
         console.error('[语音识别] 失败：', err)
-        const msg = (err && err.message) || '识别失败'
+        // 优先使用微信返回的 errMsg/errCode，比 err.message 更具体
+        const msg = (err && err.errMsg) || (err && err.message) || '识别失败'
+        const code = (err && err.errCode) || ''
         if (msg.indexOf('未配置腾讯云') !== -1) {
           wx.showToast({ title: '语音功能未配置', icon: 'none' })
         } else {
           // 把真实错误前 30 字也带出来，方便排查（复制给开发者即可）
-          const detail = msg.length > 30 ? msg.slice(0, 30) + '…' : msg
+          const detail = (code ? code + ' ' : '') + (msg.length > 30 ? msg.slice(0, 30) + '…' : msg)
           wx.showToast({ title: '识别失败：' + detail, icon: 'none' })
         }
       })

@@ -97,7 +97,10 @@ function callCloudVoice(voiceAction, payload) {
       name: config.CLOUD_VOICE_FUNCTION || 'voice',
       data: Object.assign({ voiceAction }, payload),
       success: (res) => resolve(res.result),
-      fail: (err) => reject(err)
+      fail: (err) => {
+        console.error('[voice] callFunction fail:', err)
+        reject(err)
+      }
     })
   })
 }
