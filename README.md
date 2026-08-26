@@ -51,12 +51,16 @@ dad-why-mini/
 │   ├── index/                        # 页面一：首页（提问 + 年龄选择）
 │   └── chat/                         # 页面二：回答页（回答 + 三个互动按钮）
 ├── utils/
-│   ├── ai.js                         # AI 请求层（云函数 / HTTP 两种模式）
+│   ├── ai.js                         # AI 请求层（云函数 / HTTP / Mock 三种模式）
+│   ├── voice.js                      # 语音层（cloud 模式走 voice 云函数，http 模式走本地服务）
 │   └── storage.js                    # 本地保存孩子年龄
 ├── cloudfunctions/
-│   └── ask/                          # 云函数：调用大模型，内置 System Prompt
+│   ├── ask/                          # 云函数：调用大模型，内置 System Prompt
+│   │   ├── index.js
+│   │   └── package.json              # 依赖 wx-server-sdk
+│   └── voice/                        # 云函数：语音识别 ASR + 语音合成 TTS（腾讯云）
 │       ├── index.js
-│       └── package.json
+│       └── package.json              # 依赖 wx-server-sdk + tencentcloud-sdk-nodejs
 ├── server/
 │   └── index.js                      # 备选：本地/自建 HTTP 服务（无需云环境）
 ├── SYSTEM_PROMPT.md                  # 当前使用的 System Prompt（与代码保持一致）
@@ -81,57 +85,75 @@ dad-why-mini/
 
 ---
 
-## 三、方式一：云函数（推荐）
+## 三、方式一：云函数（推荐，免本地服务器、换网络不用改 IP）
 
-### 1. 导入项目
+> 这是**默认后端模式**（仓库里 `config.js` 已设为 `BACKEND_MODE: 'cloud'`）。
+> 好处：不需要你电脑开着服务、不需要改局域网 IP、不受公司 WiFi 隔离影响——手机走微信服务器中转，到哪都能用。
+
+### 1. 导入项目（用真实 AppID）
 - 微信开发者工具 → 导入项目 → 选择本目录 `dad-why-mini`。
-- **AppID** 填你自己的（不要用测试号，云开发需要真实 AppID）。
-- 把 `project.config.json` 里的 `"appid": "wxYOUR_APPID"` 改成你的 AppID。
+- **AppID 填你自己的真实 AppID**（不要用测试号，云开发需要真实 AppID；个人主体即可）。
+  - 把 `project.config.json` 里的 `"appid"` 改成你的 AppID；或直接用真实 AppID 重新导入（会自动写入）。
+- 导入后开发者工具会提示「是否使用云开发」→ 选**使用云开发**。
 
-### 2. 开通云开发
-- 开发者工具顶部点「云开发」→ 开通 → 创建环境，记下**环境 ID**。
+### 2. 开通云开发并创建环境
+- 开发者工具顶部点「云开发」→ 开通 → 创建一个**免费环境**（每月 3000 资源点，个人用足够）。
+- 记下控制台里的**环境 ID**（形如 `cloud1-xxxx`）。
 
-### 3. 部署 ask 云函数
-- 在「云开发 → 云函数」里，右键 `cloudfunctions/ask` → 上传并部署（云端安装依赖）。
-- 或在文件树右键 `cloudfunctions/ask` → 「新建并部署：云端安装依赖」。
+### 3. 部署两个云函数（关键）
+在左侧「云开发 → 云函数」，或文件树里分别右键部署：
+- `cloudfunctions/ask` → 右键 → **上传并部署：云端安装依赖**（AI 问答，含 DeepSeek Key）
+- `cloudfunctions/voice` → 右键 → **上传并部署：云端安装依赖**（语音识别 + 合成，含腾讯云 Key）
 
-### 4. 配置环境变量（关键！）
-在「云开发 → 云函数 → ask → 配置 → 环境变量」中添加：
+> 项目已配置 `cloudfunctionRoot: "cloudfunctions/"`，右键即可看到「上传并部署」菜单。
+> 每个函数要单独传一次；部署后可在云函数列表点「测试」确认返回正常 JSON。
 
-| 键 | 值 | 说明 |
-|----|----|------|
-| `API_KEY` | `sk-xxxx` | 你的 DeepSeek（或兼容厂商）API Key **必填** |
-| `API_BASE` | `https://api.deepseek.com/v1` | 选填，默认即此 |
-| `MODEL` | `deepseek-chat` | 选填，默认即此 |
+### 4. 配置环境变量（关键！密钥只在云端，不进前端）
+- **ask 函数**（`云函数 → ask → 配置 → 环境变量`）：
 
-> ⚠️ API Key 只存在于云端环境变量，前端代码里**绝不出现** Key。
+  | 键 | 值 | 说明 |
+  |----|----|------|
+  | `API_KEY` | `sk-xxxx` | 你的 DeepSeek（或兼容厂商）API Key **必填** |
+  | `API_BASE` | `https://api.deepseek.com/v1` | 选填，默认即此 |
+  | `MODEL` | `deepseek-chat` | 选填，默认即此 |
 
-### 5. 修改 config.js
+- **voice 函数**（`云函数 → voice → 配置 → 环境变量`）：
+
+  | 键 | 值 | 说明 |
+  |----|----|------|
+  | `TENCENT_SECRET_ID` | `AKID...` | 腾讯云 SecretId **必填（要语音功能才需要）** |
+  | `TENCENT_SECRET_KEY` | `xxxx` | 腾讯云 SecretKey **必填（要语音功能才需要）** |
+
+> ⚠️ 两个 Key 都只存在于云端环境变量，前端代码里**绝不出现**任何 Key。
+
+### 5. 填环境 ID
+`config.js` 已设 `BACKEND_MODE: 'cloud'`，只需把 `CLOUD_ENV` 改成第 2 步记下的环境 ID：
 ```js
 module.exports = {
   BACKEND_MODE: 'cloud',
-  CLOUD_ENV: '你的云环境ID',   // ← 改成第 2 步记下的环境 ID
+  CLOUD_ENV: '你的云环境ID',        // ← 改成你的环境 ID
   CLOUD_FUNCTION: 'ask',
-  HTTP_BASE_URL: 'http://192.168.1.100:3000' // 云模式用不到，留着即可
+  CLOUD_VOICE_FUNCTION: 'voice'
 }
 ```
 
 ### 6. 编译运行
-- 回到开发者工具，点「编译」。首页出现后输入问题、选年龄、点「讲给孩子听」。
+- 点「编译」。首页输入问题、选年龄、点「讲给孩子听」。
+- 全文语音：首页「🎤 按住说话」、回答卡「🔊 念给孩子听」均走 `voice` 云函数。
 
 ---
 
 ## 四、方式二：本地服务器（无云环境也能真机预览）
 
-适合没有云开发环境、想快速在手机上试用的场景。手机和电脑需连**同一 WiFi**。
+适合没有云开发环境、想快速在手机上试用的场景。手机和电脑需连**同一 WiFi**；
+**此模式下语音输入/播放也走本地服务器**，同样受 WiFi/局域网 IP 限制。
 
 ### 1. 启动服务
 ```bash
 cd dad-why-mini/server
 export API_KEY=sk-你的DeepSeekKey
-# 可选：
-# export API_BASE=https://api.deepseek.com/v1
-# export MODEL=deepseek-chat
+export TENCENT_SECRET_ID=你的SecretId      # 可选：语音识别/合成
+export TENCENT_SECRET_KEY=你的SecretKey    # 可选：语音识别/合成
 node index.js
 # 看到 “本地服务已启动: http://localhost:3000/ask” 即成功
 ```
@@ -144,6 +166,7 @@ module.exports = {
 }
 ```
 > 电脑的局域网 IP 可在终端用 `ifconfig` / `ipconfig` 查看（不要写 localhost，手机访问不到）。
+> 换 WiFi/热点时 IP 会变，需回来改 `HTTP_BASE_URL` / `VOICE_BASE_URL`。
 
 ### 3. 关闭域名校验
 微信开发者工具 → 详情 → 本地设置 → 勾选「不校验合法域名、web-view（业务域名）、TLS 版本以及 HTTPS 证书」。
@@ -163,6 +186,7 @@ module.exports = {
 
 > 注意：预览二维码有时效，过期后重新点「预览」即可。
 > 若用方式二（本地服务器），手机必须与电脑同一 WiFi，且 `HTTP_BASE_URL` 填电脑局域网 IP。
+> **方式一（云函数）无此限制**——换网络、换手机都不用改任何配置。
 
 ---
 
@@ -176,7 +200,7 @@ module.exports = {
 | 腾讯混元 | `https://api.hunyuan.cloud.tencent.com/v1` | `hunyuan-lite` 或 `hunyuan-pro` |
 | OpenAI | `https://api.openai.com/v1` | `gpt-4o-mini` |
 
-- 云函数：在云函数环境变量里改 `API_BASE` / `MODEL`。
+- 云函数：在 `ask` 云函数环境变量里改 `API_BASE` / `MODEL`。
 - 本地服务：用 `export API_BASE=...` / `export MODEL=...` 重启。
 
 ---
@@ -185,41 +209,24 @@ module.exports = {
 
 小程序支持两个语音能力：
 
-- **语音输入**：首页「🎤 按住说话」——按住录入孩子的原话，松手自动识别成文字填入提问框（amr 格式，腾讯云一句话识别）。
+- **语音输入**：首页「🎤 按住说话」——按住录入孩子的原话，松手自动识别成文字填入提问框（mp3 格式，腾讯云一句话识别）。
 - **语音播放**：回答卡片「🔊 念给孩子听」——把 AI 的回答合成温柔女声（mp3），直接放给孩子听。
 
-### 1. 准备腾讯云密钥
-语音识别（ASR）与语音合成（TTS）共用**腾讯云**一组密钥（比接两个厂商省事，且中国大陆可用）：
-1. 注册/登录腾讯云 → <https://console.cloud.tencent.com/cam/capi> 获取 **SecretId** 和 **SecretKey**。
-2. 开通「语音识别 ASR」和「语音合成 TTS」两个服务（控制台搜索即可，有免费额度）。
-3. 把子账号/主账号的 Secret 填到下面环境变量。
+### 两种后端下怎么接语音？
 
-> 密钥只出现在你的电脑环境变量里，前端代码**绝不携带**。
+| 后端模式 | 语音走哪里 | 需要什么 |
+|----------|-----------|----------|
+| `cloud`（推荐） | 自动走 `voice` 云函数 | 部署 `voice` 云函数 + 配置 `TENCENT_SECRET_ID/KEY` 环境变量 |
+| `http` | 走本地 `server/index.js` 的 `/asr`、`/tts` | 本地 `npm install` + `export TENCENT_SECRET_*` 启动服务 + 手机同 WiFi |
 
-### 2. 安装语音 SDK（首次）
-```bash
-cd dad-why-mini/server
-npm install        # 安装 tencentcloud-sdk-nodejs
-```
+> 密钥只存在于云端环境变量（cloud 模式）或你电脑的环境变量（http 模式），前端代码**绝不携带**。
 
-### 3. 启动服务（带语音密钥）
-```bash
-cd dad-why-mini/server
-export API_KEY=sk-你的DeepSeekKey
-export TENCENT_SECRET_ID=你的SecretId
-export TENCENT_SECRET_KEY=你的SecretKey
-node index.js
-# 启动日志若没有「未检测到 TENCENT_SECRET…」提示，即语音已就绪
-```
-
-### 4. 前端无需额外配置
-`config.js` 里 `VOICE_BASE_URL` 默认等于 `HTTP_BASE_URL`，填的是你电脑局域网 IP，手机同 WiFi 即可访问 `/asr` 和 `/tts`。
-
-### 5. 没有密钥会怎样？
+### 没有密钥会怎样？
 - 文字问答完全正常。
 - 点「按住说话」/「念给孩子听」会提示「语音功能未配置」，不会出现白屏或崩溃。
 
-> ⚠️ 真机预览时手机必须与电脑同一 WiFi；语音接口走的是你的局域网服务器，不经过微信服务器，**无需在小程序后台配置 request 合法域名**（但开发者工具里仍需勾选「不校验合法域名」，见方式二第 3 步）。
+> ⚠️ 播放注意：微信 `InnerAudioContext` 默认遵守手机静音键（`obeyMuteSwitch`）。
+> 代码已设为静音也出声；若仍听不到，请检查手机媒体音量，或按一下侧边静音键切换。
 
 ---
 

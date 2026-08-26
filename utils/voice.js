@@ -90,8 +90,27 @@ function speechToText() {
     .then((text) => text)
 }
 
+// 调用语音云函数（cloud 模式）
+function callCloudVoice(voiceAction, payload) {
+  return new Promise((resolve, reject) => {
+    wx.cloud.callFunction({
+      name: config.CLOUD_VOICE_FUNCTION || 'voice',
+      data: Object.assign({ voiceAction }, payload),
+      success: (res) => resolve(res.result),
+      fail: (err) => reject(err)
+    })
+  })
+}
+
 // 把 base64 音频送到 /asr 识别，返回文本
 function asr(b64) {
+  if (config.BACKEND_MODE === 'cloud') {
+    return callCloudVoice('asr', { audio: b64 })
+      .then((res) => {
+        if (!res || res.ok === false) throw new Error((res && res.error) || '识别失败')
+        return (res.data && res.data.text) || ''
+      })
+  }
   return postJSON(voiceBase() + '/asr', { audio: b64 })
     .then((res) => {
       if (!res || res.ok === false) throw new Error((res && res.error) || '识别失败')
@@ -104,6 +123,15 @@ let playing = false
 function textToSpeech(text) {
   if (!text) return Promise.reject(new Error('没有可播放的内容'))
   if (playing) return Promise.reject(new Error('正在播放'))
+  if (config.BACKEND_MODE === 'cloud') {
+    return callCloudVoice('tts', { text })
+      .then((res) => {
+        if (!res || res.ok === false) throw new Error((res && res.error) || '合成失败')
+        const audio = (res.data && res.data.audio) || ''
+        if (!audio) throw new Error('合成结果为空')
+        return playBase64Mp3(audio)
+      })
+  }
   return postJSON(voiceBase() + '/tts', { text })
     .then((res) => {
       if (!res || res.ok === false) throw new Error((res && res.error) || '合成失败')

@@ -33,6 +33,7 @@
   "libVersion": "3.0.0",
   "appid": "wxf98df0996afae296",
   "projectname": "baba-weishenme",
+  "cloudfunctionRoot": "cloudfunctions/",
   "condition": {},
   "simulatorPluginLibVersion": {},
   "editorSetting": {}
