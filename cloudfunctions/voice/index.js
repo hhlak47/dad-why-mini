@@ -25,14 +25,17 @@ function getAsrClient() {
   if (asrClient) return asrClient
   const secretId = process.env.TENCENT_SECRET_ID
   const secretKey = process.env.TENCENT_SECRET_KEY
-  if (!secretId || !secretKey) return null
+  if (!secretId || !secretKey) {
+    console.error('[ASR] 缺少腾讯云密钥环境变量')
+    return null
+  }
   try {
     const tencentcloud = require('tencentcloud-sdk-nodejs')
     // 腾讯云 SDK v4：各服务挂在 tencentcloud.<service>.v<version>.Client
     asrClient = new tencentcloud.asr.v20190614.Client({
       credential: { secretId, secretKey },
       region: 'ap-guangzhou',
-      profile: { httpProfile: { endpoint: 'asr.tencentcloudapi.com' } }
+      profile: { httpProfile: { endpoint: 'asr.tencentcloudapi.com', reqTimeout: 15 } }
     })
     return asrClient
   } catch (e) {
@@ -45,14 +48,17 @@ function getTtsClient() {
   if (ttsClient) return ttsClient
   const secretId = process.env.TENCENT_SECRET_ID
   const secretKey = process.env.TENCENT_SECRET_KEY
-  if (!secretId || !secretKey) return null
+  if (!secretId || !secretKey) {
+    console.error('[TTS] 缺少腾讯云密钥环境变量')
+    return null
+  }
   try {
     const tencentcloud = require('tencentcloud-sdk-nodejs')
     // 腾讯云 SDK v4：各服务挂在 tencentcloud.<service>.v<version>.Client
     ttsClient = new tencentcloud.tts.v20190823.Client({
       credential: { secretId, secretKey },
       region: 'ap-guangzhou',
-      profile: { httpProfile: { endpoint: 'tts.tencentcloudapi.com' } }
+      profile: { httpProfile: { endpoint: 'tts.tencentcloudapi.com', reqTimeout: 15 } }
     })
     return ttsClient
   } catch (e) {
@@ -101,18 +107,25 @@ function doTts(text) {
 
 // ---------------------- 入口 ----------------------
 exports.main = async (event) => {
+  const t0 = Date.now()
+  const action = event.voiceAction
+  console.log('[voice] 收到请求 action=', action, '| 是否有 TENCENT_SECRET_ID=', !!process.env.TENCENT_SECRET_ID, '| 是否有 TENCENT_SECRET_KEY=', !!process.env.TENCENT_SECRET_KEY)
   try {
-    const action = event.voiceAction
     if (action === 'asr') {
+      console.log('[voice] 开始 ASR 识别…')
       const text = await doAsr(event.audio)
+      console.log('[voice] ASR 完成，耗时', Date.now() - t0, 'ms，结果长度', (text || '').length)
       return { ok: true, data: { text } }
     }
     if (action === 'tts') {
+      console.log('[voice] 开始 TTS 合成…')
       const audio = await doTts(event.text)
+      console.log('[voice] TTS 完成，耗时', Date.now() - t0, 'ms，音频长度', (audio || '').length)
       return { ok: true, data: { audio } }
     }
     return { ok: false, error: '未知的语音动作: ' + action }
   } catch (err) {
+    console.error('[voice] 执行失败，耗时', Date.now() - t0, 'ms，错误:', String((err && err.message) ? err.message : err))
     return { ok: false, error: String((err && err.message) ? err.message : err) }
   }
 }
