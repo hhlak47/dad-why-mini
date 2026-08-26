@@ -116,7 +116,8 @@ function doTts(text, voiceId) {
       SdkAppId: trtcSdkAppId,
       Model: 'flow_02_turbo',
       Language: 'zh',
-      AudioFormat: { AudioType: 'mp3', SampleRate: 16000, AudioChannel: 1 }
+      // AudioFormat 子结构官方字段为 Format / SampleRate / Bitrate（无 AudioType / AudioChannel）
+      AudioFormat: { Format: 'mp3', SampleRate: 16000, Bitrate: 64 }
     })
     .then((resp) => resp.Audio || '')
     .catch((err) => Promise.reject(new Error('语音合成失败: ' + (err && err.message ? err.message : err))))
