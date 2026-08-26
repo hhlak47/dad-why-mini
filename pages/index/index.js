@@ -52,11 +52,14 @@ Page({
       })
       .catch((err) => {
         this.setData({ recognizing: false })
+        console.error('[语音识别] 失败：', err)
         const msg = (err && err.message) || '识别失败'
         if (msg.indexOf('未配置腾讯云') !== -1) {
           wx.showToast({ title: '语音功能未配置', icon: 'none' })
         } else {
-          wx.showToast({ title: '识别失败，请重试', icon: 'none' })
+          // 把真实错误前 30 字也带出来，方便排查（复制给开发者即可）
+          const detail = msg.length > 30 ? msg.slice(0, 30) + '…' : msg
+          wx.showToast({ title: '识别失败：' + detail, icon: 'none' })
         }
       })
   },

@@ -206,13 +206,15 @@ Page({
     voice.textToSpeech(content)
       .then(() => {})
       .catch((err) => {
+        console.error('[语音播放] 失败：', err)
         const msg = (err && err.message) || '播放失败'
         if (msg.indexOf('正在播放') !== -1) {
           wx.showToast({ title: '正在播放中', icon: 'none' })
         } else if (msg.indexOf('未配置腾讯云') !== -1) {
           wx.showToast({ title: '语音功能未配置', icon: 'none' })
         } else {
-          wx.showToast({ title: '播放失败', icon: 'none' })
+          const detail = msg.length > 30 ? msg.slice(0, 30) + '…' : msg
+          wx.showToast({ title: '播放失败：' + detail, icon: 'none' })
         }
       })
   },
