@@ -1,0 +1,9 @@
+{
+  "name": "ask",
+  "version": "1.0.0",
+  "description": "《爸爸，我为什么？》AI 云函数",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

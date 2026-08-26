@@ -1,0 +1,78 @@
+<view class="chat">
+  <view class="qbar">“{{question}}”</view>
+
+  <scroll-view class="messages" scroll-y scroll-into-view="{{scrollAnchor}}" scroll-with-animation>
+    <block wx:for="{{messages}}" wx:key="id">
+      <!-- 孩子追问 -->
+      <view wx:if="{{item.kind === 'child'}}" class="bubble child">
+        <text class="who">孩子追问</text>
+        <text class="bubble-text">{{item.content}}</text>
+      </view>
+
+      <!-- 游戏卡片 -->
+      <view wx:elif="{{item.kind === 'game'}}" class="game-card">
+        <view class="game-title">🎮 {{item.title}}</view>
+        <view class="game-meta">大概需要：{{item.duration}}　|　准备：{{item.materials}}</view>
+        <view class="game-steps">
+          <view wx:for="{{item.steps}}" wx:for-item="step" wx:key="index" class="step">
+            <text class="step-num">{{index + 1}}</text>
+            <text class="step-text">{{step}}</text>
+          </view>
+        </view>
+        <view class="game-q" wx:if="{{item.question}}">最后可以问孩子：{{item.question}}</view>
+      </view>
+
+      <!-- AI 讲给孩子听 -->
+      <view wx:else class="answer-card">
+        <view class="answer-head">👧 讲给孩子听</view>
+        <view class="answer-text">{{item.content}}</view>
+        <view class="answer-tools">
+          <text class="copy" bindtap="copyAnswer" data-content="{{item.content}}">复制这段话</text>
+          <text class="speak" bindtap="onSpeak" data-content="{{item.content}}">🔊 念给孩子听</text>
+        </view>
+      </view>
+    </block>
+
+    <!-- Loading -->
+    <view wx:if="{{loading}}" class="loading">
+      <view class="dot-spin"></view>
+      <text>{{loadingText}}</text>
+    </view>
+
+    <!-- 失败 -->
+    <view wx:if="{{error}}" class="error-box">
+      <text>刚才没有想出来，再试一次吧。</text>
+      <button class="retry-btn" bindtap="retry">重新试试</button>
+    </view>
+
+    <view id="{{scrollAnchor}}" style="height:2rpx;"></view>
+  </scroll-view>
+
+  <!-- 追问输入面板 -->
+  <view class="follow-panel" wx:if="{{showFollow}}">
+    <textarea
+      class="follow-input"
+      placeholder="她又问什么了？"
+      value="{{followText}}"
+      bindinput="onFollowInput"
+      maxlength="100"
+      auto-height
+    />
+    <view class="follow-btns">
+      <button class="ghost-btn" bindtap="cancelFollow">取消</button>
+      <button class="primary-btn sm" bindtap="onSubmitFollow">回答她</button>
+    </view>
+  </view>
+
+  <!-- 连续追问达到上限的提示 -->
+  <view wx:if="{{followDisabled}}" class="follow-hint">已经聊了很多啦，要不要问个新的“为什么”？</view>
+
+  <!-- 三个核心互动按钮 -->
+  <view class="actions">
+    <button class="act-btn" bindtap="onSimpler">🐣 再简单一点</button>
+    <button class="act-btn" bindtap="onFollowTap" disabled="{{followDisabled}}">🙋 她还在追问</button>
+    <button class="act-btn game" bindtap="onGame">🎮 和孩子一起做游戏</button>
+  </view>
+
+  <view class="new-q" bindtap="onNewQuestion">问一个新的为什么</view>
+</view>

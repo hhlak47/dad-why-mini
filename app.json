@@ -1,0 +1,15 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/chat/chat"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#FFF7EF",
+    "navigationBarTitleText": "爸爸，我为什么？",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#FFF7EF",
+    "backgroundTextStyle": "light"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

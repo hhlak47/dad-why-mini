@@ -1,0 +1,113 @@
+.home {
+  padding: 48rpx 40rpx 60rpx;
+  min-height: 100vh;
+}
+
+.hero {
+  margin-top: 40rpx;
+  margin-bottom: 56rpx;
+}
+
+.title {
+  font-size: 56rpx;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 2rpx;
+}
+
+.subtitle {
+  margin-top: 16rpx;
+  font-size: 30rpx;
+  color: var(--sub);
+}
+
+.card {
+  background: var(--card);
+  border-radius: 28rpx;
+  padding: 36rpx 32rpx;
+  box-shadow: 0 8rpx 30rpx rgba(255, 140, 90, 0.08);
+}
+
+.label {
+  font-size: 32rpx;
+  font-weight: 600;
+  margin-bottom: 20rpx;
+}
+
+.question-input {
+  width: 100%;
+  min-height: 200rpx;
+  font-size: 34rpx;
+  line-height: 1.6;
+}
+
+.ph {
+  color: #C9BEB6;
+}
+
+.age-block {
+  margin-top: 48rpx;
+}
+
+.age-row {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 20rpx;
+}
+
+.age-chip {
+  flex: 1;
+  text-align: center;
+  padding: 24rpx 0;
+  background: var(--card);
+  border-radius: 20rpx;
+  font-size: 30rpx;
+  color: var(--text);
+  border: 2rpx solid var(--line);
+}
+
+.age-chip.active {
+  background: var(--primary);
+  color: #fff;
+  font-weight: 600;
+  border-color: var(--primary);
+  box-shadow: 0 6rpx 18rpx rgba(255, 140, 90, 0.3);
+}
+
+.primary-btn {
+  margin-top: 64rpx;
+  background: var(--primary);
+  color: #fff;
+  font-size: 36rpx;
+  font-weight: 600;
+  border-radius: 999rpx;
+  padding: 28rpx 0;
+  border: none;
+  box-shadow: 0 10rpx 24rpx rgba(255, 140, 90, 0.3);
+}
+
+.primary-btn::after {
+  border: none;
+}
+
+.voice-row {
+  margin-top: 24rpx;
+  display: flex;
+}
+
+.mic-btn {
+  flex: 1;
+  text-align: center;
+  padding: 22rpx 0;
+  background: #FFF4EC;
+  color: var(--primary-deep);
+  border: 2rpx solid #FFE0CC;
+  border-radius: 18rpx;
+  font-size: 30rpx;
+}
+
+.mic-btn.recording {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}

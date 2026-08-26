@@ -1,0 +1,21 @@
+page {
+  --bg: #FFF7EF;
+  --card: #FFFFFF;
+  --primary: #FF8C5A;
+  --primary-deep: #F2783C;
+  --text: #3A3A3A;
+  --sub: #9A8E86;
+  --child-bubble: #FFE3D1;
+  --game: #FFF1DC;
+  --line: #F0E6DD;
+
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, "PingFang SC", "Helvetica Neue", Helvetica, sans-serif;
+  font-size: 32rpx;
+  line-height: 1.6;
+}
+
+view, text, textarea, button {
+  box-sizing: border-box;
+}

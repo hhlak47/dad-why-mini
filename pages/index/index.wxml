@@ -1,0 +1,42 @@
+<view class="home">
+  <view class="hero">
+    <view class="title">爸爸，我为什么？</view>
+    <view class="subtitle">把孩子的每一个“为什么”，变成一次有趣的探索。</view>
+  </view>
+
+  <view class="card">
+    <view class="label">孩子刚刚问了什么？</view>
+    <textarea
+      class="question-input"
+      placeholder="比如：为什么月亮一直跟着我？"
+      placeholder-class="ph"
+      value="{{question}}"
+      bindinput="onInput"
+      maxlength="200"
+      auto-height
+    />
+    <view class="voice-row">
+      <view
+        class="mic-btn {{recording ? 'recording' : ''}}"
+        bindtouchstart="startVoice"
+        bindtouchend="stopVoice"
+        bindtouchcancel="stopVoice"
+      >🎤 {{recording ? '松开识别' : (recognizing ? '识别中…' : '按住说话')}}</view>
+    </view>
+  </view>
+
+  <view class="age-block">
+    <view class="label">孩子几岁？</view>
+    <view class="age-row">
+      <view
+        wx:for="{{ages}}"
+        wx:key="*this"
+        class="age-chip {{age === item ? 'active' : ''}}"
+        bindtap="selectAge"
+        data-age="{{item}}"
+      >{{item}} 岁</view>
+    </view>
+  </view>
+
+  <button class="primary-btn" bindtap="onSubmit">讲给孩子听</button>
+</view>

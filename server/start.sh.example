@@ -1,0 +1,17 @@
+#!/bin/bash
+# 《爸爸，我为什么？》本地服务一键启动脚本（示例，可安全提交）
+# 用法：
+#   1. 复制本文件为 start.sh： cp start.sh.example start.sh
+#   2. 把下面三个值替换成你自己的真实密钥
+#   3. 终端运行： bash start.sh
+#
+# 注意：start.sh 含密钥，已在 .gitignore 中忽略，请勿提交到 git / 发给他人。
+
+export API_KEY="替换为你的DeepSeekKey"
+export TENCENT_SECRET_ID="替换为你的SecretId"
+export TENCENT_SECRET_KEY="替换为你的SecretKey"
+
+# 切到脚本所在目录，保证 node 能加载 node_modules
+cd "$(dirname "$0")"
+
+node index.js

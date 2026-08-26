@@ -1,0 +1,13 @@
+{
+  "name": "baba-why-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "《爸爸，我为什么？》本地服务器（AI 问答 + 腾讯云语音识别/合成）",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "tencentcloud-sdk-nodejs": "^4.0.0"
+  }
+}
