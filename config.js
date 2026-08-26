@@ -11,7 +11,7 @@ module.exports = {
   BACKEND_MODE: 'cloud',         // 已切到云函数（免本地服务器、换网络不用改 IP）
 
   // ===== 云函数模式 =====
-  CLOUD_ENV: 'your-cloud-env-id', // 在「云开发控制台」获取的环境 ID（务必改成你自己的）
+  CLOUD_ENV: 'cloud1-d8gxvnxs47a96f2b3', // 在「云开发控制台」获取的环境 ID（务必改成你自己的）
   CLOUD_FUNCTION: 'ask',           // AI 问答云函数名
   CLOUD_VOICE_FUNCTION: 'voice',   // 语音识别/合成云函数名
 

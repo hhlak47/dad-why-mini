@@ -96,6 +96,8 @@ function callCloudVoice(voiceAction, payload) {
     wx.cloud.callFunction({
       name: config.CLOUD_VOICE_FUNCTION || 'voice',
       data: Object.assign({ voiceAction }, payload),
+      // 云函数已配置 20s 超时，前端也同步放大，避免默认 3s 截断
+      timeout: 25000,
       success: (res) => resolve(res.result),
       fail: (err) => {
         console.error('[voice] callFunction fail:', err)

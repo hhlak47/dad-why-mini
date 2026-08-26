@@ -64,8 +64,13 @@ function callCloud(payload) {
     wx.cloud.callFunction({
       name: config.CLOUD_FUNCTION,
       data: payload,
+      // 云函数 ask 已配置 20s 超时，前端同步放大
+      timeout: 25000,
       success: (res) => resolve(res.result),
-      fail: (err) => reject(err)
+      fail: (err) => {
+        console.error('[ask] callFunction fail:', err)
+        reject(err)
+      }
     })
   })
 }

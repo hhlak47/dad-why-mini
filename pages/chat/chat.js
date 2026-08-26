@@ -101,7 +101,10 @@ Page({
 
     ai.askAI(payload)
       .then((res) => this._handleResult(res))
-      .catch(() => this._handleFail())
+      .catch((err) => {
+        console.error('[chat] askAI 失败：', err)
+        this._handleFail()
+      })
   },
 
   _handleResult(res) {
