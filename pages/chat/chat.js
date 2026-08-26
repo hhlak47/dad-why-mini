@@ -103,7 +103,9 @@ Page({
       .then((res) => this._handleResult(res))
       .catch((err) => {
         console.error('[chat] askAI 失败：', err)
-        this._handleFail()
+        const msg = (err && err.errMsg) || (err && err.message) || ''
+        const code = (err && err.errCode) || ''
+        this._handleFail(code, msg)
       })
   },
 
@@ -149,8 +151,12 @@ Page({
     this._scrollBottom()
   },
 
-  _handleFail() {
+  _handleFail(code, msg) {
     this._stopLoading()
+    // -504003 = 云函数执行超时（默认 3s 不够 AI 回答用）
+    if (code === -504003 || code === '-504003' || String(msg).indexOf('504003') !== -1 || String(msg).indexOf('timed out') !== -1) {
+      wx.showToast({ title: '云函数超时，请到控制台把 ask 超时改 20 秒', icon: 'none' })
+    }
     this.setData({ error: true })
   },
 
