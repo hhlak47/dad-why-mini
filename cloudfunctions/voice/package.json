@@ -1,10 +1,9 @@
 {
   "name": "voice",
-  "version": "1.0.0",
-  "description": "《爸爸，我为什么？》语音云函数（ASR + TTS）",
+  "version": "2.0.0",
+  "description": "voice cloud function (ASR + TTS + VoiceClone) - zero dependency, native https",
   "main": "index.js",
   "dependencies": {
-    "wx-server-sdk": "~2.6.3",
-    "tencentcloud-sdk-nodejs": "^4.0.0"
+    "wx-server-sdk": "~2.6.3"
   }
 }

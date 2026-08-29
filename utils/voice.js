@@ -60,7 +60,8 @@ function startRecord() {
   return new Promise((resolve, reject) => {
     const rm = getRecorder()
     try {
-      // mp3 + 16k + 48k 是微信 RecorderManager 稳定支持的组合；腾讯云 ASR 也支持 mp3
+      // mp3 + 16k + 单声道：体积小（30秒约240KB），避免超过云函数1MB请求限制
+      // 腾讯云 ASR 和 VoiceClone 均支持 mp3 格式
       rm.start({ format: 'mp3', sampleRate: 16000, numberOfChannels: 1, encodeBitRate: 48000 })
       resolve()
     } catch (e) {
@@ -137,7 +138,7 @@ function textToSpeech(text, voiceId) {
         return playBase64Mp3(audio)
       })
   }
-  return postJSON(voiceBase() + '/tts', { text })
+  return postJSON(voiceBase() + '/tts', { text, voiceId })
     .then((res) => {
       if (!res || res.ok === false) throw new Error((res && res.error) || '合成失败')
       const audio = (res.data && res.data.audio) || ''

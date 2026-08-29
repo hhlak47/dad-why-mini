@@ -12,15 +12,21 @@
   </view>
 
   <view class="guide-card">
-    <view class="guide-label">请{{roleName}}朗读下面这段话（安静环境、自然语速）：</view>
+    <view class="guide-label">请{{roleName}}朗读下面这段话（安静环境、自然语速，建议15-30秒）：</view>
     <view class="guide-text">{{guideText}}</view>
   </view>
 
   <button class="rec-btn {{recording ? 'recording' : ''}}" bindtap="toggleRecord" disabled="{{cloning}}">
-    {{cloning ? '训练中…' : (recording ? '停止并克隆' : '开始录制')}}
+    <block wx:if="{{cloning}}">训练中…</block>
+    <block wx:elif="{{recording}}">停止并克隆（{{recordSeconds}}秒）</block>
+    <block wx:else>开始录制</block>
   </button>
 
-  <view class="status" wx:if="{{statusText}}">{{statusText}}</view>
+  <view class="status {{cloning ? 'status-cloning' : ''}}" wx:if="{{statusText}}">{{statusText}}</view>
 
-  <view class="tip">说明：声音克隆由腾讯云提供，限时免费。录音仅用于生成专属音色，可随时在腾讯云控制台删除。</view>
+  <view class="tip">
+    <view>• 请在安静环境下录制，距离手机20-30厘米</view>
+    <view>• 声音克隆由腾讯云提供，限时免费</view>
+    <view>• 录音仅用于生成专属音色，可随时在腾讯云控制台删除</view>
+  </view>
 </view>

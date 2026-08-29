@@ -5,11 +5,32 @@
 }
 
 .qbar {
-  padding: 28rpx 40rpx;
-  font-size: 34rpx;
-  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 32rpx;
   background: var(--card);
   border-bottom: 1rpx solid var(--line);
+  gap: 16rpx;
+}
+
+.qbar-text {
+  flex: 1;
+  font-size: 32rpx;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.qbar-fav {
+  flex: none;
+  font-size: 26rpx;
+  color: var(--primary-deep);
+  background: #FFF4EC;
+  padding: 10rpx 22rpx;
+  border-radius: 999rpx;
+  border: 1rpx solid #FFD9C2;
 }
 
 .messages {
@@ -58,24 +79,41 @@
 }
 
 .answer-tools {
-  margin-top: 18rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-top: 20rpx;
 }
 
-.copy {
+.tool-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  height: 64rpx;
+  padding: 0 28rpx;
   font-size: 26rpx;
   color: var(--primary-deep);
   border: 1rpx solid #FFD9C2;
-  padding: 8rpx 22rpx;
   border-radius: 999rpx;
+  background: #FFFAF6;
+  line-height: 1;
 }
 
-.speak {
+.tool-icon {
+  font-size: 28rpx;
+  line-height: 1;
+}
+
+.tool-label {
   font-size: 26rpx;
-  color: var(--primary-deep);
-  border: 1rpx solid #FFD9C2;
-  padding: 8rpx 22rpx;
-  border-radius: 999rpx;
-  margin-left: 16rpx;
+  line-height: 1;
+}
+
+.tool-btn.favorited {
+  background: #FFF4E0;
+  color: #B8860B;
+  border-color: #F5D88A;
 }
 
 .game-card {
@@ -177,17 +215,54 @@
 
 .follow-panel {
   background: var(--card);
-  padding: 24rpx 32rpx;
+  padding: 20rpx 28rpx;
   border-top: 1rpx solid var(--line);
 }
 
+.follow-input-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 16rpx;
+}
+
 .follow-input {
-  width: 100%;
-  min-height: 120rpx;
+  flex: 1;
+  min-height: 80rpx;
+  max-height: 200rpx;
   background: #FBF4EE;
   border-radius: 18rpx;
-  padding: 20rpx;
+  padding: 18rpx 20rpx;
   font-size: 31rpx;
+}
+
+.ph {
+  color: #C9BEB6;
+}
+
+.follow-mic {
+  flex: none;
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 50%;
+  background: #FFF4EC;
+  border: 2rpx solid #FFE0CC;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36rpx;
+  color: var(--primary-deep);
+}
+
+.follow-mic.recording {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
 }
 
 .follow-btns {
@@ -261,7 +336,8 @@
 .new-q {
   text-align: center;
   font-size: 28rpx;
-  color: var(--sub);
+  color: var(--primary-deep);
+  font-weight: 600;
   padding: 22rpx 0 30rpx;
   background: var(--card);
 }

@@ -125,3 +125,10 @@
   border-radius: 20rpx;
   font-size: 30rpx;
 }
+
+.link-btn.fav-link {
+  margin-top: 20rpx;
+  border-color: #F5D88A;
+  color: #B8860B;
+  background: #FFFCF0;
+}

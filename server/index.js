@@ -14,6 +14,7 @@
 
 const http = require('http')
 const https = require('https')
+const crypto = require('crypto')
 
 const PORT = process.env.PORT || 3000
 const API_KEY = process.env.API_KEY
@@ -21,6 +22,7 @@ const API_BASE = process.env.API_BASE || 'https://api.deepseek.com/v1'
 const MODEL = process.env.MODEL || 'deepseek-chat'
 const TENCENT_SECRET_ID = process.env.TENCENT_SECRET_ID
 const TENCENT_SECRET_KEY = process.env.TENCENT_SECRET_KEY
+const TRTC_APP_ID = parseInt(process.env.TRTC_SDK_APP_ID || '0', 10)
 
 const SYSTEM_PROMPT = `你是一名非常擅长和 3–6 岁孩子交流的“亲子好奇心助手”。
 你的任务不是展示知识量，也不是代替父母教育孩子。
@@ -194,7 +196,7 @@ function getTtsClient() {
   }
 }
 
-// /asr：接收 base64 的 amr 音频，返回识别文本
+// /asr：接收 base64 的 mp3 音频，返回识别文本
 function handleAsr(body) {
   const client = getTencentClient()
   if (!client) return Promise.reject(new Error('未配置腾讯云密钥（TENCENT_SECRET_ID/KEY），无法使用语音识别'))
@@ -218,23 +220,153 @@ function handleAsr(body) {
 }
 
 // /tts：接收文本，返回 base64 的 mp3 音频
-function handleTts(body) {
+// 混合路由：克隆音色（v-xxx）走 TRTC TTS，预设音色走基础 TTS（更便宜）
+function splitTextForTts(text, maxLen) {
+  if (!text || text.length <= maxLen) return [text || '']
+  const chunks = []
+  let remaining = text
+  const punctuation = ['。', '！', '？', '；', '，', '、', ' ', '.', '!', '?', ';', ',', '\n']
+  while (remaining.length > maxLen) {
+    const slice = remaining.slice(0, maxLen)
+    let splitAt = -1
+    for (let i = slice.length - 1; i >= 0; i--) {
+      if (punctuation.includes(slice[i])) { splitAt = i + 1; break }
+    }
+    if (splitAt <= 0) splitAt = maxLen
+    chunks.push(remaining.slice(0, splitAt))
+    remaining = remaining.slice(splitAt)
+  }
+  if (remaining) chunks.push(remaining)
+  return chunks
+}
+
+function sha256Hmac(message, secret) {
+  return crypto.createHmac('sha256', secret).update(message).digest()
+}
+
+function hexSha256(data) {
+  return crypto.createHash('sha256').update(data).digest('hex')
+}
+
+function tencentRequest(service, action, payload, region, version) {
+  if (!TENCENT_SECRET_ID || !TENCENT_SECRET_KEY) {
+    return Promise.reject(new Error('Missing TENCENT_SECRET_ID / TENCENT_SECRET_KEY env vars'))
+  }
+  const host = service + '.tencentcloudapi.com'
+  const payloadStr = JSON.stringify(payload || {})
+  const timestamp = Math.floor(Date.now() / 1000)
+  const date = new Date(timestamp * 1000).toISOString().slice(0, 10)
+
+  const canonicalHeaders =
+    'content-type:application/json; charset=utf-8\n' +
+    'host:' + host + '\n' +
+    'x-tc-action:' + action.toLowerCase() + '\n'
+  const signedHeaders = 'content-type;host;x-tc-action'
+  const canonicalRequest = [
+    'POST', '/', '', canonicalHeaders, signedHeaders, hexSha256(payloadStr)
+  ].join('\n')
+
+  const credentialScope = date + '/' + service + '/tc3_request'
+  const stringToSign = [
+    'TC3-HMAC-SHA256', timestamp, credentialScope, hexSha256(canonicalRequest)
+  ].join('\n')
+
+  const secretDate = sha256Hmac(date, 'TC3' + TENCENT_SECRET_KEY)
+  const secretService = sha256Hmac(service, secretDate)
+  const secretSigning = sha256Hmac('tc3_request', secretService)
+  const signature = crypto.createHmac('sha256', secretSigning).update(stringToSign).digest('hex')
+
+  const authorization =
+    'TC3-HMAC-SHA256 Credential=' + TENCENT_SECRET_ID + '/' + credentialScope +
+    ', SignedHeaders=' + signedHeaders + ', Signature=' + signature
+
+  return new Promise((resolve, reject) => {
+    const req = https.request({
+      hostname: host, port: 443, path: '/', method: 'POST',
+      headers: {
+        'Authorization': authorization,
+        'Content-Type': 'application/json; charset=utf-8',
+        'X-TC-Action': action,
+        'X-TC-Timestamp': timestamp.toString(),
+        'X-TC-Version': version,
+        'X-TC-Region': region || 'ap-guangzhou'
+      },
+      timeout: 30000
+    }, (res) => {
+      let data = ''
+      res.on('data', (c) => (data += c))
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(data)
+          if (json.Response && json.Response.Error) {
+            return reject(new Error(json.Response.Error.Message || 'Tencent Cloud API error'))
+          }
+          resolve(json.Response || {})
+        } catch (e) {
+          reject(new Error('Failed to parse response: ' + data.slice(0, 200)))
+        }
+      })
+    })
+    req.on('error', reject)
+    req.setTimeout(30000, () => req.destroy(new Error('Request timeout (30s)')))
+    req.write(payloadStr)
+    req.end()
+  })
+}
+
+function doTrtcTts(text, voiceId) {
+  if (!TRTC_APP_ID) return Promise.reject(new Error('Missing TRTC_SDK_APP_ID env var'))
+  return tencentRequest('trtc', 'TextToSpeech', {
+    Text: text,
+    Voice: { VoiceId: voiceId },
+    SdkAppId: TRTC_APP_ID,
+    Model: 'flow_02_turbo',
+    Language: 'zh',
+    AudioFormat: { Format: 'mp3', SampleRate: 16000, Bitrate: 64 }
+  }, 'ap-guangzhou', '2019-07-22').then((resp) => resp.Audio || '')
+}
+
+function doBasicTts(text, voiceType) {
+  const chunks = splitTextForTts(text, 150)
   const client = getTtsClient()
-  if (!client) return Promise.reject(new Error('未配置腾讯云密钥（TENCENT_SECRET_ID/KEY），无法使用语音合成'))
+  if (!client) return Promise.reject(new Error('未配置腾讯云密钥，无法使用语音合成'))
+
+  return chunks.reduce((chain, chunk, idx) => {
+    return chain.then((acc) => {
+      return client.request('TextToVoice', {
+        Text: chunk,
+        SessionId: 'baba_why_' + Date.now() + '_' + idx,
+        Volume: 5,
+        Speed: 0,
+        VoiceType: voiceType || 101001,
+        Codec: 'mp3',
+        SampleRate: 16000
+      }).then((resp) => {
+        const buf = Buffer.from(resp.Audio || '', 'base64')
+        return Buffer.concat([acc, buf])
+      })
+    })
+  }, Promise.resolve(Buffer.alloc(0))).then((fullBuf) => fullBuf.toString('base64'))
+}
+
+function handleTts(body) {
+  if (!TENCENT_SECRET_ID || !TENCENT_SECRET_KEY) {
+    return Promise.reject(new Error('未配置腾讯云密钥（TENCENT_SECRET_ID/KEY），无法使用语音合成'))
+  }
   const text = (body && body.text) || ''
   if (!text) return Promise.reject(new Error('缺少文本'))
-  return new Promise((resolve, reject) => {
-    client.request('TextToVoice', {
-      Text: text,
-      SessionId: 'baba_why_' + Date.now(),
-      Volume: 5,
-      Speed: 0,
-      VoiceType: 101001, // 智瑜，温柔女声
-      Codec: 'mp3'
-    }).then((resp) => {
-      resolve(resp.Audio || '')
-    }).catch((err) => reject(new Error('语音合成失败: ' + (err && err.message ? err.message : err))))
-  })
+
+  const voiceId = body.voiceId || ''
+  const isNumericVoice = /^\d+$/.test(voiceId)
+  const useBasicEngine = !voiceId || isNumericVoice
+
+  if (!useBasicEngine) {
+    console.log('[TTS] using TRTC engine for cloned voice:', voiceId)
+    return doTrtcTts(text, voiceId)
+  }
+  const voiceType = parseInt(voiceId, 10) || 101001
+  console.log('[TTS] using basic engine, voiceType:', voiceType)
+  return doBasicTts(text, voiceType)
 }
 
 // ============================================================

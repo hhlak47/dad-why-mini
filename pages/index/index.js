@@ -10,9 +10,13 @@ Page({
     recognizing: false
   },
 
-  onLoad() {
+  onLoad(options) {
     // 默认记住上一次选择的孩子年龄
     this.setData({ age: storage.getAge() })
+    // 从聊天页点击"问一个新的为什么"回来时，清空问题框
+    if (options && options.clear === '1') {
+      this.setData({ question: '' })
+    }
   },
 
   onInput(e) {
@@ -83,5 +87,9 @@ Page({
 
   goVoice() {
     wx.navigateTo({ url: '/pages/voice/voice' })
+  },
+
+  goFavorites() {
+    wx.navigateTo({ url: '/pages/favorites/favorites' })
   }
 })

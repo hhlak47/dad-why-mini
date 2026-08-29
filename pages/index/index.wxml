@@ -42,5 +42,6 @@
 
   <view class="link-row">
     <view class="link-btn" bindtap="goVoice">🎙️ 我的声音（让爸爸妈妈读答案）</view>
+    <view class="link-btn fav-link" bindtap="goFavorites">⭐ 我的收藏（优秀问答）</view>
   </view>
 </view>

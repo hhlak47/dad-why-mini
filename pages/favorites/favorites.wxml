@@ -1,0 +1,37 @@
+<view class="fav-page">
+  <view wx:if="{{list.length === 0}}" class="empty">
+    <view class="empty-icon">⭐</view>
+    <view class="empty-text">还没有收藏的问答</view>
+    <view class="empty-hint">在聊天页点击「收藏」，把好回答存下来吧</view>
+  </view>
+
+  <view wx:else class="fav-list">
+    <view wx:for="{{list}}" wx:key="id" class="fav-card">
+      <view class="fav-q">
+        <text class="q-label">问</text>
+        <text class="q-text">{{item.question}}</text>
+      </view>
+      <view class="fav-a">
+        <text class="a-label">答</text>
+        <text class="a-text">{{item.answer}}</text>
+      </view>
+      <view class="fav-meta">
+        <text class="fav-age" wx:if="{{item.age}}">{{item.age}}岁</text>
+      </view>
+      <view class="fav-actions">
+        <view class="fav-btn {{playingId === item.id ? 'playing' : ''}}" bindtap="onSpeak" data-content="{{item.answer}}" data-id="{{item.id}}">
+          <text class="fb-icon">{{playingId === item.id ? '🔊' : '🔈'}}</text>
+          <text class="fb-label">{{playingId === item.id ? '播放中' : '念给孩子听'}}</text>
+        </view>
+        <view class="fav-btn" bindtap="onCopy" data-content="{{item.answer}}">
+          <text class="fb-icon">📋</text>
+          <text class="fb-label">复制</text>
+        </view>
+        <view class="fav-btn danger" bindtap="onRemove" data-id="{{item.id}}">
+          <text class="fb-icon">🗑</text>
+          <text class="fb-label">移除</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

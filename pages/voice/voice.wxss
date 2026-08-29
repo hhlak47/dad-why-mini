@@ -69,10 +69,13 @@
   color: #07c160;
   text-align: center;
 }
+.status.status-cloning {
+  color: #ff9700;
+}
 .tip {
   margin-top: auto;
   padding-top: 40rpx;
   font-size: 22rpx;
   color: #bbb;
-  line-height: 1.6;
+  line-height: 1.8;
 }

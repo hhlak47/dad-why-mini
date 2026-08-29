@@ -1,0 +1,154 @@
+.fav-page {
+  padding: 24rpx 32rpx 60rpx;
+  min-height: 100vh;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 200rpx;
+}
+
+.empty-icon {
+  font-size: 100rpx;
+  margin-bottom: 24rpx;
+}
+
+.empty-text {
+  font-size: 34rpx;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.empty-hint {
+  margin-top: 16rpx;
+  font-size: 26rpx;
+  color: var(--sub);
+}
+
+.fav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.fav-card {
+  background: var(--card);
+  border-radius: 24rpx;
+  padding: 28rpx 26rpx;
+  box-shadow: 0 4rpx 18rpx rgba(0, 0, 0, 0.04);
+}
+
+.fav-q {
+  display: flex;
+  align-items: flex-start;
+  gap: 14rpx;
+  margin-bottom: 16rpx;
+}
+
+.q-label {
+  flex: none;
+  background: var(--primary);
+  color: #fff;
+  font-size: 22rpx;
+  font-weight: 700;
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 40rpx;
+}
+
+.q-text {
+  flex: 1;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.fav-a {
+  display: flex;
+  align-items: flex-start;
+  gap: 14rpx;
+}
+
+.a-label {
+  flex: none;
+  background: #E8F8EE;
+  color: #07c160;
+  font-size: 22rpx;
+  font-weight: 700;
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 40rpx;
+}
+
+.a-text {
+  flex: 1;
+  font-size: 30rpx;
+  color: #555;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.fav-meta {
+  margin-top: 14rpx;
+  padding-left: 54rpx;
+}
+
+.fav-age {
+  font-size: 22rpx;
+  color: var(--sub);
+  background: #F5F0EB;
+  padding: 4rpx 16rpx;
+  border-radius: 999rpx;
+}
+
+.fav-actions {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 18rpx;
+  padding-left: 54rpx;
+  flex-wrap: wrap;
+}
+
+.fav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6rpx;
+  height: 56rpx;
+  padding: 0 24rpx;
+  font-size: 24rpx;
+  color: var(--primary-deep);
+  border: 1rpx solid #FFD9C2;
+  border-radius: 999rpx;
+  background: #FFFAF6;
+  line-height: 1;
+}
+
+.fb-icon {
+  font-size: 24rpx;
+  line-height: 1;
+}
+
+.fb-label {
+  font-size: 24rpx;
+  line-height: 1;
+}
+
+.fav-btn.playing {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.fav-btn.danger {
+  color: #C0392B;
+  border-color: #F5C6CB;
+  background: #FFFAFA;
+}

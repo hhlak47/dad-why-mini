@@ -1,5 +1,8 @@
 <view class="chat">
-  <view class="qbar">“{{question}}”</view>
+  <view class="qbar">
+    <text class="qbar-text">“{{question}}”</text>
+    <text class="qbar-fav" bindtap="goFavorites">⭐ 收藏夹</text>
+  </view>
 
   <view class="voice-switch" wx:if="{{voiceOptions.length > 1}}">
     <text class="vs-label">声音</text>
@@ -39,8 +42,18 @@
         <view class="answer-head">👧 讲给孩子听</view>
         <view class="answer-text">{{item.content}}</view>
         <view class="answer-tools">
-          <text class="copy" bindtap="copyAnswer" data-content="{{item.content}}">复制这段话</text>
-          <text class="speak" bindtap="onSpeak" data-content="{{item.content}}">🔊 念给孩子听</text>
+          <view class="tool-btn {{item.favorited ? 'favorited' : ''}}" bindtap="toggleFavorite" data-content="{{item.content}}" data-id="{{item.id}}">
+            <text class="tool-icon">{{item.favorited ? '⭐' : '☆'}}</text>
+            <text class="tool-label">{{item.favorited ? '已收藏' : '收藏'}}</text>
+          </view>
+          <view class="tool-btn" bindtap="copyAnswer" data-content="{{item.content}}">
+            <text class="tool-icon">📋</text>
+            <text class="tool-label">复制</text>
+          </view>
+          <view class="tool-btn" bindtap="onSpeak" data-content="{{item.content}}">
+            <text class="tool-icon">🔊</text>
+            <text class="tool-label">念给孩子听</text>
+          </view>
         </view>
       </view>
     </block>
@@ -62,14 +75,23 @@
 
   <!-- 追问输入面板 -->
   <view class="follow-panel" wx:if="{{showFollow}}">
-    <textarea
-      class="follow-input"
-      placeholder="她又问什么了？"
-      value="{{followText}}"
-      bindinput="onFollowInput"
-      maxlength="100"
-      auto-height
-    />
+    <view class="follow-input-row">
+      <textarea
+        class="follow-input"
+        placeholder="她又问什么了？"
+        placeholder-class="ph"
+        value="{{followText}}"
+        bindinput="onFollowInput"
+        maxlength="100"
+        auto-height
+      />
+      <view
+        class="follow-mic {{followRecording ? 'recording' : ''}}"
+        bindtouchstart="startFollowVoice"
+        bindtouchend="stopFollowVoice"
+        bindtouchcancel="stopFollowVoice"
+      >{{followRecording ? '🎤 松开' : (followRecognizing ? '识别中…' : '🎤')}}</view>
+    </view>
     <view class="follow-btns">
       <button class="ghost-btn" bindtap="cancelFollow">取消</button>
       <button class="primary-btn sm" bindtap="onSubmitFollow">回答她</button>
@@ -77,7 +99,7 @@
   </view>
 
   <!-- 连续追问达到上限的提示 -->
-  <view wx:if="{{followDisabled}}" class="follow-hint">已经聊了很多啦，要不要问个新的“为什么”？</view>
+  <view wx:if="{{followDisabled}}" class="follow-hint">已经聊了很多啦，要不要问个新的"为什么"？</view>
 
   <!-- 三个核心互动按钮 -->
   <view class="actions">
@@ -86,5 +108,5 @@
     <button class="act-btn game" bindtap="onGame">🎮 和孩子一起做游戏</button>
   </view>
 
-  <view class="new-q" bindtap="onNewQuestion">问一个新的为什么</view>
+  <view class="new-q" bindtap="onNewQuestion">问一个新的为什么 →</view>
 </view>

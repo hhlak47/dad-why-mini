@@ -2,7 +2,8 @@
   "pages": [
     "pages/index/index",
     "pages/chat/chat",
-    "pages/voice/voice"
+    "pages/voice/voice",
+    "pages/favorites/favorites"
   ],
   "window": {
     "navigationBarBackgroundColor": "#FFF7EF",
