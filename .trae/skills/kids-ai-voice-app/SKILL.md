@@ -35,9 +35,9 @@ pages/index（首页：问题输入 + 年龄选择 + 按住说话语音输入）
 
 | 模式 | 走向 | 适用 |
 |------|------|------|
-| `mock` | 本地假数据（600ms 延迟） | 零配置先看界面 |
+| `mock` | 本地假数据（600ms 延迟） | 零配置先看界面（**仅文字问答**，语音不可用会 toast 降级提示） |
 | `cloud`（推荐） | `wx.cloud.callFunction` → ask/voice 云函数 | 免服务器、免改 IP |
-| `http` | `wx.request` POST 自建 Node 服务器 | 本地调试，手机电脑同 WiFi |
+| `http` | `wx.request` POST 自建 Node 服务器 | 本地调试，手机电脑同 WiFi（接口契约见 [frontend-contracts.md](frontend-contracts.md) 第 7 节） |
 
 **密钥安全原则**：所有 API Key 只存在于云函数环境变量 / 服务器环境变量，前端代码绝不出现密钥。
 
@@ -58,11 +58,12 @@ pages/index（首页：问题输入 + 年龄选择 + 按住说话语音输入）
     - `simpler`：50-120 字，**换角度而非缩短**
     - `followup`：带完整会话历史 + 最新追问，不重复、可引用旧比喻
     - `game`：生成马上能玩的亲子游戏（找一找/猜一猜/演一演等），无材料、3 分钟可开始
-  - **JSON 4 级容错**（模型输出不稳定，必须兜底）：
+  - **JSON 5 级容错**（模型输出不稳定，必须兜底）：
     1. 直接 `JSON.parse`
     2. 正则去掉 ```` ```json ```` 代码块再 parse
     3. 截取第一个 `{...}` 片段 parse
-    4. 全失败则把原文包成 `{type:'answer', content:原文}`，绝不白屏
+    4. 截取第一个 `[...]` 片段 parse
+    5. 全失败则把原文包成 `{type:'answer', content:原文}`，绝不白屏
   - 返回统一格式：`{ok:true, data:parsed}` / `{ok:false, error:msg}`
 - 完整模板见 [templates/cloudfunction-ask.js](templates/cloudfunction-ask.js)
 
@@ -184,9 +185,10 @@ module.exports = {
 
 ### 收藏功能（本地 Storage）
 
-- key：`<app>_favorites`，上限 200 条，添加时去重
-- 结构：`{id, question, answer, age, createdAt}`
-- 聊天页每条回答卡片有收藏/取消收藏按钮，用 `favorited` 布尔值控制 UI 状态
+- Storage key：`baba_why_favorites`（可按你的应用名改前缀），上限 200 条，添加时按 question+answer 去重
+- 结构：`{id, question, answer, age, createdAt}`，新条目 unshift 到头部
+- 直接用模板 [templates/utils-favorites.js](templates/utils-favorites.js)
+- 聊天页每条回答卡片有收藏/取消收藏按钮，用消息的 `favorited` 布尔值控制 UI 状态（☆/⭐）
 
 ### 按钮布局（微信小程序 UI 注意事项）
 
@@ -216,7 +218,7 @@ module.exports = {
 
 5. **iPhone 静音键导致 TTS 无声**：必须设 `audio.obeyMuteSwitch = false`。
 
-6. **模型输出 JSON 不稳定**：即使指定 `response_format:{type:'json_object'}`，模型仍可能返回带 Markdown 代码块或纯文本。必须实现 4 级 JSON 解析容错，最终兜底把原文当 answer 返回。
+6. **模型输出 JSON 不稳定**：即使指定 `response_format:{type:'json_object'}`，模型仍可能返回带 Markdown 代码块或纯文本。必须实现 5 级 JSON 解析容错（直接 parse → 去代码块 → 抽 `{}` → 抽 `[]` → 兜底包原文），最终把原文当 answer 返回。
 
 7. **VoiceClone 的 PromptText 必须与录音内容一致**：如果引导文案为空或和录音不匹配，克隆会失败或音色质量差。前端引导文案必须在 data 中定义并传给云函数。
 
@@ -245,8 +247,27 @@ module.exports = {
 
 ## 八、模板文件
 
+**后端/语音（直接复制即可用，已通过实战验证）**：
 - [templates/cloudfunction-ask.js](templates/cloudfunction-ask.js) — AI 问答云函数完整代码（零依赖，原生 https）
 - [templates/cloudfunction-voice.js](templates/cloudfunction-voice.js) — 语音云函数完整代码（TC3 签名 + ASR + TTS 双引擎 + VoiceClone）
 - [templates/utils-voice.js](templates/utils-voice.js) — 前端语音工具（录音/ASR/TTS/克隆/播放）
-- [templates/config.js](templates/config.js) — 三模式配置文件
 - [templates/system-prompt.md](templates/system-prompt.md) — AI 系统提示词模板
+
+**前端/胶水层（直接复制即可用）**：
+- [templates/utils-ai.js](templates/utils-ai.js) — 前端 AI 请求层（mock/cloud/http 三模式自动切换，含 mock 假数据）
+- [templates/utils-favorites.js](templates/utils-favorites.js) — 收藏功能本地存储工具
+- [templates/app.js](templates/app.js) — 小程序入口（云开发初始化 + 环境检测）
+- [templates/config.js](templates/config.js) — 三模式配置文件
+
+**前端数据契约（务必先读，决定页面怎么写）**：
+- [frontend-contracts.md](frontend-contracts.md) — **页面 data 结构、messages 消息格式、云数据库 voices 集合 schema 与权限设置、追问状态机、HTTP 接口契约、录音权限、工程配置清单**
+
+> **建议实现顺序**：先读 frontend-contracts.md 了解数据结构 → 复制 5 个后端/工具模板 → 照契约编写 4 个页面 → mock 模式验证界面 → 切 cloud 模式配密钥联调。
+
+## 九、新手最容易卡住的 3 个环节（重点排查）
+
+1. **声音克隆全链路**：需先在腾讯云 TRTC 控制台开通服务并拿到 SdkAppId（注意不是腾讯云 AppID，见踩坑 #9）；克隆成功后要把 VoiceId 写入云数据库 `voices` 集合，且该集合**权限必须设置为"所有用户可读可写"或自定义安全规则**（见 frontend-contracts.md 第 1 节），否则前端写库报权限错误；PromptText 必须与录音朗读内容一致。
+
+2. **页面消息格式对齐**：chat 页发给云函数的 context 中，孩子消息的 `role` 必须是 **`'child'`**（不是 `'user'`），云函数 formatHistory 据此判断。messages 展示列表用 `kind: 'answer'|'child'|'game'` 区分渲染。详见 frontend-contracts.md 第 2 节。
+
+3. **云函数部署与超时**：必须右键云函数目录「上传并部署：云端安装依赖」；ask 超时配 20 秒、voice 配 60 秒（config.json）；部署时若报 Updating 状态冲突，等 1-2 分钟再点一次，不要狂点。
